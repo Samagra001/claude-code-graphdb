@@ -202,17 +202,104 @@ rewritten each run.
 
 ## What this suggests
 
-Where graphdb pays for itself:
-- **Route resolution** (namespace-encoded).
-- **Transitive impact** / "who calls who at depth N".
-- **Filtered call graphs** that grep can't distinguish (mention vs actual
-  callsite).
+Each pattern below maps to a specific shape of question, with a concrete
+example from `smart-hub-backend`.
 
-Where grep is fine or better:
-- **One-shot literal-string lookup** in a known small file.
-- **"Just show me the lines"** when you don't need structured context.
+### Where graphdb pays for itself
 
-The right design isn't "graphdb instead of grep" — it's giving Claude both,
-and letting it pick the right tool for the question. The benchmark above is
-the data point that motivates picking the graph for the questions it's
-actually good at.
+**1. Route resolution (namespace-encoded).** Rails nests routes inside
+namespace blocks:
+
+```ruby
+namespace :api do
+  namespace :v1 do
+    resources :campaigns          # ← what URL is this?
+  end
+end
+```
+
+`grep campaigns config/routes.rb` returns the `resources :campaigns` line —
+but **not** the fact that the URL is `/api/v1/campaigns`. To answer, you
+have to read the surrounding 50+ lines and mentally walk the namespace
+stack. `routes_for("Api::V1::CampaignsController")` returns the resolved
+`{verb: POST, url: /api/v1/campaigns}` directly. The graph did the
+namespace walk at index time, once.
+
+**2. Transitive impact ("who calls who at depth N").** Say you want to
+rename `ScheduleExecutionJob.perform`. Direct callers (depth 1) are easy —
+grep finds them. But you also need:
+
+- Depth 2: who calls those callers? (e.g. a controller action that invokes
+  the service that enqueues the job)
+- Depth 3: who calls *those*? (e.g. a scheduled task that triggers the
+  controller flow)
+
+To do depth-3 with grep you grep for `ScheduleExecutionJob`, identify each
+containing symbol, grep for *each of those*, then repeat. That's N rounds
+of greps and N rounds of file reads. `impact_of("ScheduleExecutionJob",
+max_depth=3)` does it in one Cypher BFS — 251 tokens, one tool call.
+
+**3. Mention vs actual callsite.** `grep -rn UserInviteMailer app/` returned
+7 hits in this codebase. Of those:
+
+- 1 is the class definition (`class UserInviteMailer < …`)
+- 1 is a string literal in a config
+- 2 are spec test setups
+- 3 are actual delivery callsites
+
+grep cannot distinguish these — they're all the same string match.
+`find_callers` traverses `DELIVERS` edges only, so it returns just the 3
+real callsites. For a question like "who actually sends this email?",
+that's the difference between getting a clean answer and reading 6 files
+to filter the noise yourself.
+
+### Where grep is fine or better
+
+**4. One-shot literal-string lookup.** "Does anyone use the constant
+`FORBIDDEN_KEYS`?" — grep is perfect. graphdb doesn't index string literals
+or non-DSL constants at the value level. Same for `grep TODO`,
+`grep -rn 'X-API-Key'`, finding a typo'd method name, locating a hardcoded
+URL.
+
+**5. "Just show me the lines."** "How is `email` validated on User?" —
+`grep -n 'validates :email' app/models/user.rb` returns
+
+```ruby
+validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+```
+
+— one line, exact source, ready to read. graphdb's structured output for
+validations would emit 3–4 edges (one per rule) which is more verbose for
+a "show me the source" question. The Account benchmark (0.4× ratio,
+section 3 above) was exactly this pattern: too much structure for a question
+that wanted text.
+
+### Concrete session: "give Claude both"
+
+Imagine the prompt: *"Rename `ScheduleExecutionJob` to `JobRunner` and make
+sure nothing breaks."*
+
+A well-tuned Claude flow:
+
+1. `impact_of("ScheduleExecutionJob", max_depth=3)` → 251 tokens, gets the
+   full transitive caller tree.
+2. `find_callers(...)` to confirm the depth-1 callsites that need the
+   rename in Ruby code.
+3. `grep -rn ScheduleExecutionJob` → catches anything graphdb missed:
+   string literals in YAML, mentions in `Procfile`, `Sidekiq` queue config,
+   inline comments, etc.
+4. `Edit` each file.
+
+Steps 1–2 use graphdb because the question is "what's the reachable set in
+Ruby code". Step 3 uses grep because the question is "are there any string
+mentions outside parsed Ruby". Neither tool alone is sufficient; together
+they're complementary.
+
+### Takeaway
+
+The benchmark is not arguing "graphdb instead of grep." It's arguing that
+for the question shapes in §1–3 (structural, multi-hop, mention-vs-call),
+graphdb is **strictly cheaper and more accurate**, and Claude should reach
+for it first. For §4–5 (literal strings, "show me the source"), grep
+remains the right tool. The MCP server exposes graphdb's 8 query tools
+*alongside* Claude's existing Bash + grep — Claude picks per question.
