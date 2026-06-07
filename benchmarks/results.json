@@ -1,0 +1,162 @@
+[
+  {
+    "task": {
+      "id": "routes",
+      "question": "What routes hit Api::V1::CampaignsController?",
+      "graph": [
+        "routes_for",
+        "Api::V1::CampaignsController"
+      ],
+      "grep_min": "grep -n -i campaigns config/routes.rb",
+      "grep_real": "grep -n -i campaigns config/routes.rb && cat config/routes.rb"
+    },
+    "graph": {
+      "median_ms": 5.32,
+      "min_ms": 3.47,
+      "bytes": 828,
+      "tokens": 281,
+      "records": 5
+    },
+    "grep_min": {
+      "median_ms": 37.49,
+      "min_ms": 32.62,
+      "bytes": 180,
+      "tokens": 48,
+      "lines": 4
+    },
+    "grep_real": {
+      "median_ms": 33.46,
+      "min_ms": 26.21,
+      "bytes": 7564,
+      "tokens": 1767,
+      "lines": 215
+    }
+  },
+  {
+    "task": {
+      "id": "callers",
+      "question": "Who delivers UserInviteMailer?",
+      "graph": [
+        "find_callers",
+        "UserInviteMailer",
+        2
+      ],
+      "grep_min": "grep -rn UserInviteMailer app/ lib/ 2>/dev/null",
+      "grep_real_files": "grep -rn UserInviteMailer app/ lib/ 2>/dev/null"
+    },
+    "graph": {
+      "median_ms": 170.7,
+      "min_ms": 141.99,
+      "bytes": 1586,
+      "tokens": 456,
+      "records": 4
+    },
+    "grep_min": {
+      "median_ms": 89.74,
+      "min_ms": 38.77,
+      "bytes": 592,
+      "tokens": 134,
+      "lines": 7
+    },
+    "grep_real": {
+      "median_ms": 35.19,
+      "min_ms": 31.0,
+      "bytes": 10340,
+      "tokens": 2285,
+      "files_read": 6
+    }
+  },
+  {
+    "task": {
+      "id": "assoc",
+      "question": "What associations does Account have (incl. reverse refs)?",
+      "graph": [
+        "associations_of",
+        "Account"
+      ],
+      "grep_min": "grep -nE '^\\s*(has_many|has_one|belongs_to|has_and_belongs_to_many)' app/models/account.rb",
+      "grep_real": "grep -nE '^\\s*(has_many|has_one|belongs_to)' app/models/account.rb && grep -rnE 'belongs_to :account|has_many :accounts|has_one :account' app/models/"
+    },
+    "graph": {
+      "median_ms": 5.94,
+      "min_ms": 5.3,
+      "bytes": 4142,
+      "tokens": 1203,
+      "records": null
+    },
+    "grep_min": {
+      "median_ms": 17.5,
+      "min_ms": 16.83,
+      "bytes": 620,
+      "tokens": 189,
+      "lines": 16
+    },
+    "grep_real": {
+      "median_ms": 22.03,
+      "min_ms": 21.67,
+      "bytes": 1738,
+      "tokens": 505,
+      "lines": 35
+    }
+  },
+  {
+    "task": {
+      "id": "impact",
+      "question": "Blast radius (depth 3) of changing ScheduleExecutionJob",
+      "graph": [
+        "impact_of",
+        "ScheduleExecutionJob",
+        3
+      ],
+      "grep_min": "grep -rn ScheduleExecutionJob app/ lib/ 2>/dev/null",
+      "grep_real_files": "grep -rn ScheduleExecutionJob app/ lib/ 2>/dev/null"
+    },
+    "graph": {
+      "median_ms": 244.55,
+      "min_ms": 239.78,
+      "bytes": 981,
+      "tokens": 251,
+      "records": null
+    },
+    "grep_min": {
+      "median_ms": 32.44,
+      "min_ms": 29.55,
+      "bytes": 395,
+      "tokens": 91,
+      "lines": 4
+    },
+    "grep_real": {
+      "median_ms": 31.33,
+      "min_ms": 29.84,
+      "bytes": 8957,
+      "tokens": 1981,
+      "files_read": 4
+    }
+  },
+  {
+    "task": {
+      "id": "def",
+      "question": "Where is the method `notify` defined?",
+      "graph": [
+        "find_definition",
+        "notify"
+      ],
+      "grep_min": "grep -rn 'def notify' app/ lib/ 2>/dev/null"
+    },
+    "graph": {
+      "median_ms": 0.94,
+      "min_ms": 0.87,
+      "bytes": 2,
+      "tokens": 1,
+      "records": 0
+    },
+    "grep_min": {
+      "median_ms": 32.0,
+      "min_ms": 31.64,
+      "bytes": 0,
+      "tokens": 0,
+      "lines": 0
+    },
+    "grep_real": null
+  }
+]
