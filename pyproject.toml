@@ -1,0 +1,25 @@
+[project]
+name = "graphdb"
+version = "0.1.0"
+description = "Kùzu-backed code-graph MCP plugin for Claude Code. Indexes Ruby on Rails codebases."
+requires-python = ">=3.10"
+dependencies = [
+    "kuzu>=0.6.0",
+    "tree-sitter>=0.21",
+    "tree-sitter-ruby>=0.21",
+    "mcp>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+graphdb = "graphdb.cli:main"
+graphdb-mcp = "graphdb.mcp_server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.graphdb/
+.venv/
+dist/
+build/
+.pytest_cache/
