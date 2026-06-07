@@ -1,5 +1,7 @@
 # graphdb
 
+[![tokens vs grep: 3.0x fewer](https://img.shields.io/badge/tokens%20vs%20grep-3.0x%20fewer-brightgreen)](./benchmarks/BENCHMARK.md)
+
 A Kùzu-backed code-graph MCP plugin for Claude Code. Indexes Ruby on Rails
 codebases into a queryable graph of associations, routes, callbacks, jobs, and
 mailers — a token-efficient alternative to grep for navigating Rails code.
