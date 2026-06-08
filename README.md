@@ -6,6 +6,12 @@ A Kùzu-backed code-graph MCP plugin for Claude Code. Indexes Ruby on Rails
 codebases into a queryable graph of associations, routes, callbacks, jobs, and
 mailers — a token-efficient alternative to grep for navigating Rails code.
 
+![graphdb demo](docs/demo.gif)
+
+> The animation above shows the CLI. The same eight tools are exposed to Claude
+> Code via MCP — see [docs/PROMPTS.md](docs/PROMPTS.md) for natural-language
+> prompts you can try directly in a Claude Code session.
+
 ## Why
 
 Rails encodes most of its architecture in **DSL declarations** (`has_many`,
