@@ -134,7 +134,17 @@ class CodeGraph:
             db_path = default_db_path_for(self.root)
         db_path = Path(db_path)
         if reset and db_path.exists():
-            shutil.rmtree(db_path)
+            # Kùzu 0.10+ writes a single file; older versions wrote a directory.
+            # Handle both, plus the WAL sidecar Kùzu may leave next to the file.
+            if db_path.is_dir():
+                shutil.rmtree(db_path)
+            else:
+                db_path.unlink()
+                for sidecar in db_path.parent.glob(db_path.name + ".*"):
+                    try:
+                        sidecar.unlink()
+                    except OSError:
+                        pass
         db_path.parent.mkdir(parents=True, exist_ok=True)
         self.db_path = db_path
         self._db = kuzu.Database(str(db_path))
